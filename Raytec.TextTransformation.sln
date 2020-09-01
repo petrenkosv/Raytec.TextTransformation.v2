@@ -1,0 +1,58 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Raytec.TextTransformation", "Raytec.TextTransformation", "{4B030A05-6AA9-49ED-A6DB-2F5254B84564}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raytec.TextTransformation", "Raytec.TextTransformation\Raytec.TextTransformation.csproj", "{4C603F3B-0A1A-478F-9369-2D1C978573EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raytec.TextTransformation.Activities", "Raytec.TextTransformation.Activities\Raytec.TextTransformation.Activities.csproj", "{4BC452B8-5A17-4951-B6B2-BD522CF33DE8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raytec.TextTransformation.Activities.Design", "Raytec.TextTransformation.Activities.Design\Raytec.TextTransformation.Activities.Design.csproj", "{92860F4E-CA98-4CF3-9117-74F8A3AE4EB5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{6D96E2C5-F3A9-4A5E-AA89-CA878CE155CF}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "UiPath.Shared.Activities", "..\Shared\UiPath.Shared.Activities\UiPath.Shared.Activities.shproj", "{4546856D-EA50-45C6-9419-EEEACB5A80AA}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "UiPath.Shared.Activities.Design", "..\Shared\UiPath.Shared.Activities.Design\UiPath.Shared.Activities.Design.shproj", "{DF9C43F0-ADD3-4FBF-995E-84B92F9CBF25}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\Shared\UiPath.Shared.Activities\UiPath.Shared.Activities.projitems*{4546856d-ea50-45c6-9419-eeeacb5a80aa}*SharedItemsImports = 13
+		..\Shared\UiPath.Shared.Activities\UiPath.Shared.Activities.projitems*{4bc452b8-5a17-4951-b6b2-bd522cf33de8}*SharedItemsImports = 5
+		..\Shared\UiPath.Shared.Activities.Design\UiPath.Shared.Activities.Design.projitems*{92860f4e-ca98-4cf3-9117-74f8a3ae4eb5}*SharedItemsImports = 5
+		..\Shared\UiPath.Shared.Activities.Design\UiPath.Shared.Activities.Design.projitems*{df9c43f0-add3-4fbf-995e-84b92f9cbf25}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C603F3B-0A1A-478F-9369-2D1C978573EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C603F3B-0A1A-478F-9369-2D1C978573EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C603F3B-0A1A-478F-9369-2D1C978573EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C603F3B-0A1A-478F-9369-2D1C978573EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BC452B8-5A17-4951-B6B2-BD522CF33DE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BC452B8-5A17-4951-B6B2-BD522CF33DE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BC452B8-5A17-4951-B6B2-BD522CF33DE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BC452B8-5A17-4951-B6B2-BD522CF33DE8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92860F4E-CA98-4CF3-9117-74F8A3AE4EB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92860F4E-CA98-4CF3-9117-74F8A3AE4EB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92860F4E-CA98-4CF3-9117-74F8A3AE4EB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92860F4E-CA98-4CF3-9117-74F8A3AE4EB5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{4C603F3B-0A1A-478F-9369-2D1C978573EA} = {4B030A05-6AA9-49ED-A6DB-2F5254B84564}
+		{4BC452B8-5A17-4951-B6B2-BD522CF33DE8} = {4B030A05-6AA9-49ED-A6DB-2F5254B84564}
+		{92860F4E-CA98-4CF3-9117-74F8A3AE4EB5} = {4B030A05-6AA9-49ED-A6DB-2F5254B84564}
+		{4546856D-EA50-45C6-9419-EEEACB5A80AA} = {6D96E2C5-F3A9-4A5E-AA89-CA878CE155CF}
+		{DF9C43F0-ADD3-4FBF-995E-84B92F9CBF25} = {6D96E2C5-F3A9-4A5E-AA89-CA878CE155CF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32438FCE-4857-441A-AD62-57D504E30DE4}
+	EndGlobalSection
+EndGlobal
