@@ -36,30 +36,16 @@ This repository contains a custom UiPath activity designed to perform advanced t
 
 3. Run the workflow to process the input text and extract structured data.
 
-## JSON Settings File
+## Input Variables
 
-The activity uses a JSON file to define the structure and rules for data extraction.
+- **Text**: The input text to be processed. (Type: `String`)
+- **PathToTheSettingsFile**: The path to the JSON file containing recognition settings. (Type: `String`)
+- **LineSeparator**: The character or string used to separate lines in the input text. (Type: `String`)
+- **CultureVariable**: The culture information (e.g., `en-US`, `ru-RU`) for localization. (Type: `String`)
 
-```json
-{
-  "paragraph": [
-    {
-      "name": "Paragraph1",
-      "keys": ["key1", "key2"],
-      "sentence": [
-        {
-          "name": "Sentence1",
-          "keys": ["keyA", "keyB"],
-          "format": "string",
-          "overlap": 1,
-          "options": ["{option1}", "{option2}"],
-          "split": ["L.separator"]
-        }
-      ]
-    }
-  ]
-}
-```
+## Output Variables
+
+- **Output**: A `DataTable` containing the extracted structured data based on the input text and JSON settings.
 
 ## Development
 
