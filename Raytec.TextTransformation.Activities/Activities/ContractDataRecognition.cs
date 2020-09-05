@@ -95,47 +95,54 @@ namespace Raytec.TextTransformation.Activities
 
 
         #region Transformators
-        // Получаем список абзацев
+        // Split the text into paragraphs using the line separator and other newline characters.
         static List<string> GetParagraphs(string inputText, string lineSeparator)
         {
-            // Абзацы делятся при условии наличия разделития и цифры после него
+            // Split the text into paragraphs using the line separator and other newline characters
             var splitText = inputText.Split(new[] { lineSeparator, Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None).ToList();
             var paragraphsText = new List<string>();
             var tempText = new List<string>();
-
-            tempText.Add(splitText[0]);
-            for (int i = 1; i < splitText.Count(); i++)
+        
+            // Initialize the first paragraph
+            if (splitText.Count > 0)
             {
-                if (splitText[i].Count() > 1)
+                tempText.Add(splitText[0]);
+            }
+        
+            // Iterate through the split text to group lines into paragraphs
+            for (int i = 1; i < splitText.Count; i++)
+            {
+                if (splitText[i].Length > 1)
                 {
-                    if (Char.IsDigit(splitText[i][0]) && splitText[i][1].Equals('.') && tempText.Count() > 0 || splitText[i][0].Equals('-'))
+                    // Check if the line starts a new paragraph (e.g., numbered or dashed lines)
+                    if ((Char.IsDigit(splitText[i][0]) && splitText[i][1].Equals('.')) || splitText[i][0].Equals('-'))
                     {
-                        paragraphsText.Add(String.Join(" ", tempText));
-                        tempText = new List<string>();
-                        tempText.Add(splitText[i]);
+                        if (tempText.Count > 0)
+                        {
+                            paragraphsText.Add(String.Join(" ", tempText));
+                        }
+                        tempText = new List<string> { splitText[i] };
                     }
                     else
                     {
                         tempText.Add(splitText[i]);
                     }
-
                 }
-
-                if (i == splitText.Count() - 1 && tempText.Count() > 0)
+        
+                // Add the last paragraph if it's not empty
+                if (i == splitText.Count - 1 && tempText.Count > 0)
                 {
                     paragraphsText.Add(String.Join(" ", tempText));
                 }
-
             }
-
-
-            // Убираем цифры из параграфа
+        
+            // Remove the first part of each paragraph that contains numbers, dots, or dashes
             var paragraphSubstring = new List<string>();
-
             foreach (var item in paragraphsText)
             {
                 var charCounter = 0;
-
+        
+                // Count characters to skip (numbers, dots, or dashes)
                 foreach (var character in item)
                 {
                     if (Char.IsDigit(character) || character.Equals('.') || character.Equals('-'))
@@ -147,35 +154,38 @@ namespace Raytec.TextTransformation.Activities
                         break;
                     }
                 }
-
+        
+                // Add the cleaned paragraph to the result
                 paragraphSubstring.Add(item.Substring(charCounter).Trim());
-
             }
-
+        
             return paragraphSubstring;
-
         }
 
-        // Определяем принадлежность абзацев
+        // Find the best match for the paragraph using the keywords and return its index.
         static int ParagraphDefinition(List<string> text, ParagraphAttributes paragraph, int overlapNumber = 1)
         {
-            var bestMatch = new int[2];
-
-            for (int tNum = 0; tNum < text.Count(); tNum++)
+            // Initialize the best match array to store the index and match count
+            var bestMatch = new int[2] { -1, 0 };
+        
+            // Iterate through each paragraph in the text
+            for (int tNum = 0; tNum < text.Count; tNum++)
             {
-                var words = text[tNum].ToLower().Split(new[] { " " }, StringSplitOptions.None);
-                var cell = new int[paragraph.keys.Count(), words.Count()];
-
-                // Сверяем текст с ключами
-                for (int i = 0; i < paragraph.keys.Count(); i++)
+                // Split the current paragraph into words
+                var words = text[tNum].ToLower().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+        
+                // Create a 2D array to store the number of matches for each keyword in the paragraph
+                var cell = new int[paragraph.keys.Count, words.Length];
+        
+                for (int i = 0; i < paragraph.keys.Count; i++)
                 {
-
-
-                    for (int j = 0; j < words.Count(); j++)
+                    for (int j = 0; j < words.Length; j++)
                     {
-                        int i2 = i < 1 ? 0 : i - 1;
-                        int j2 = j < 1 ? 0 : j - 1;
-
+                        // Handle boundary conditions for the 2D array
+                        int i2 = i > 0 ? i - 1 : 0;
+                        int j2 = j > 0 ? j - 1 : 0;
+        
+                        // Check if the current word contains the keyword
                         if (words[j].Contains(paragraph.keys[i].ToLower()))
                         {
                             cell[i, j] = cell[i2, j2] + 1;
@@ -186,40 +196,46 @@ namespace Raytec.TextTransformation.Activities
                         }
                     }
                 }
-
+        
+                // Find the maximum match count in the 2D array
                 int maxCell = cell.Cast<int>().Max();
-
+        
+                // Update the best match if the current match count is higher
                 if (bestMatch[1] < maxCell)
                 {
                     bestMatch[0] = tNum;
                     bestMatch[1] = maxCell;
                 }
-
             }
-
-            return ((bestMatch[0] > 0 || bestMatch[1] > 0) && bestMatch[1] >= overlapNumber ? bestMatch[0] : -1);
+        
+            // Return the index of the best match if it meets the overlap threshold, otherwise return -1
+            return (bestMatch[1] >= overlapNumber) ? bestMatch[0] : -1;
         }
 
-        // Определяем принадлежность предложения 
+        // Find the best match for the sentence using the keywords and return its index.
         static int SentenceDefinition(List<string> text, SentenceAttributes sentence, int overlapNumber = 1)
         {
-            var bestMatch = new int[2];
-
-            for (int tNum = 0; tNum < text.Count(); tNum++)
+            // Initialize the best match array to store the index and match count
+            var bestMatch = new int[2] { -1, 0 };
+        
+            // Iterate through each sentence in the text
+            for (int tNum = 0; tNum < text.Count; tNum++)
             {
-                var words = text[tNum].ToLower().Split(new[] { " " }, StringSplitOptions.None);
-                var cell = new int[sentence.keys.Count(), words.Count()];
-
-                // Сверяем текст с ключами
-                for (int i = 0; i < sentence.keys.Count(); i++)
+                // Split the current sentence into words
+                var words = text[tNum].ToLower().Split(new[] { " " }, StringSplitOptions.RemoveEmptyEntries);
+        
+                // Create a 2D array to store the number of matches for each keyword in the sentence
+                var cell = new int[sentence.keys.Count, words.Length];
+        
+                for (int i = 0; i < sentence.keys.Count; i++)
                 {
-
-
-                    for (int j = 0; j < words.Count(); j++)
+                    for (int j = 0; j < words.Length; j++)
                     {
-                        int i2 = i < 1 ? 0 : i - 1;
-                        int j2 = j < 1 ? 0 : j - 1;
-
+                        // Handle boundary conditions for the 2D array
+                        int i2 = i > 0 ? i - 1 : 0;
+                        int j2 = j > 0 ? j - 1 : 0;
+        
+                        // Check if the current word contains the keyword
                         if (words[j].Contains(sentence.keys[i].ToLower()))
                         {
                             cell[i, j] = cell[i2, j2] + 1;
@@ -230,130 +246,116 @@ namespace Raytec.TextTransformation.Activities
                         }
                     }
                 }
-
+        
+                // Find the maximum match count in the 2D array
                 int maxCell = cell.Cast<int>().Max();
-
+        
+                // Update the best match if the current match count is higher
                 if (bestMatch[1] < maxCell)
                 {
                     bestMatch[0] = tNum;
                     bestMatch[1] = maxCell;
                 }
-
             }
-
-            return ((bestMatch[0] > 0 || bestMatch[1] > 0) && bestMatch[1] >= overlapNumber ? bestMatch[0] : -1);
+        
+            // Return the index of the best match if it meets the overlap threshold, otherwise return -1
+            return (bestMatch[1] >= overlapNumber) ? bestMatch[0] : -1;
         }
 
-        // Получаем данные в предложении
+        // Extract the data from the text based on the specified format and options.
         static string GetData(string text, SentenceAttributes sentenceAttributes, string cultureVariable)
         {
-            /*
-            Данные могут иметь следующую структуру:
-            - числовые (int)
-            - число с плавающей точкой, два знака после запятой (double)
-            - текстовые
-            -- с наличием предопределенных вариантов
-            -- без вариантов
-            */
-
-            string output = String.Empty;
-            var temp = new List<string>();
-
+            // Initialize the output variable
+            string output = string.Empty;
+        
+            // Handle splitting logic based on the 'split' attribute
             foreach (var splitItem in sentenceAttributes.split)
             {
-                var splitPart = splitItem.Split(new[] { "." }, StringSplitOptions.None)[0];
-                var splitDivider = splitItem.Split(new[] { "." }, StringSplitOptions.None)[1];
-
+                var splitParts = splitItem.Split(new[] { "." }, StringSplitOptions.None);
+                var splitPart = splitParts[0];
+                var splitDivider = splitParts[1];
+        
                 if (text.Contains(splitDivider))
                 {
-                    if (splitPart.Equals("L"))
-                    {
-                        text = text.Split(new[] { splitDivider }, StringSplitOptions.None).Last();
-                    }
-                    else
-                    {
-                        text = text.Split(new[] { splitDivider }, StringSplitOptions.None)[Convert.ToInt32(splitPart)];
-                    }
+                    text = splitPart.Equals("L")
+                        ? text.Split(new[] { splitDivider }, StringSplitOptions.None).Last()
+                        : text.Split(new[] { splitDivider }, StringSplitOptions.None)[Convert.ToInt32(splitPart)];
                 }
             }
-
-            // Находим значения в строке
-
-            if (sentenceAttributes.format.Equals("int")) // если формат числовой (int) - возвращается только первое найденное число в строке после деления (split)
+        
+            // Handle different formats specified in the 'format' attribute
+            switch (sentenceAttributes.format.ToLower())
             {
-                output = (Regex.Match(text, @"\d+").Value).ToString();
-
-            }
-            else if (sentenceAttributes.format.Equals("double")) // если формат число с плавающей точкой (double) - возвращаются все числа найденные в строке после деления (split)
-            {
-                output = String.Format(CultureInfo.CreateSpecificCulture("ru-RU"), "{0:0.00}",
-                Convert.ToDouble(string.Join("", text.ToCharArray().Where(Char.IsDigit))) / 100);
-            }
-            else if (sentenceAttributes.format.Equals("string"))
-            {
-
-                var outputList = new List<string>();
-
-                // Перечисляем все опции в sentenceAttributes 
-                for (int oNum = 0; oNum < sentenceAttributes.options.Count(); oNum++)
-                {
-                    
-                    // Строку делим на слова
-                    var words = text.Trim().ToLower().Split(new[] { " " }, StringSplitOptions.None);
-
-                    // В каждой опции выделяем ключи, которые хранятся внутри скобок "{ }" выбранный вариант ключа может быть только один
-                    var optionKeys = sentenceAttributes.options[oNum].Split(new[] { "{", "}" }, StringSplitOptions.None)[1].Split(new[] { "," }, StringSplitOptions.None);
-
-                    // Сверяем текст с ключами
-                    for (int i = 0; i < optionKeys.Count(); i++)
+                case "int":
+                    // Extract integer values from the text
+                    output = Regex.Match(text, @"\d+").Value;
+                    break;
+        
+                case "double":
+                    // Extract and format double values
+                    output = string.Format(CultureInfo.CreateSpecificCulture(cultureVariable), "{0:0.00}",
+                        Convert.ToDouble(string.Join("", text.ToCharArray().Where(char.IsDigit))) / 100);
+                    break;
+        
+                case "string":
+                    // Handle string format with options
+                    var outputList = new List<string>();
+        
+                    foreach (var option in sentenceAttributes.options)
                     {
-                        if (text.Trim().ToLower().Contains(optionKeys[i].Split(new[] { "." }, StringSplitOptions.None)[0].ToLower().Trim()))
+                        var words = text.Trim().ToLower().Split(new[] { " " }, StringSplitOptions.None);
+                        var optionKeys = option.Split(new[] { "{", "}" }, StringSplitOptions.None)[1]
+                                               .Split(new[] { "," }, StringSplitOptions.None);
+        
+                        foreach (var key in optionKeys)
                         {
-                            outputList.Add(sentenceAttributes.options[oNum].Replace(sentenceAttributes.options[oNum].Substring(sentenceAttributes.options[oNum].IndexOf("{"), (sentenceAttributes.options[oNum].IndexOf("}") - sentenceAttributes.options[oNum].IndexOf("{") + 1)), optionKeys[i].Replace(".", "")).Trim());
-                            break;
+                            if (words.Contains(key.Split('.')[0].ToLower().Trim()))
+                            {
+                                outputList.Add(option.Replace(option.Substring(option.IndexOf("{"),
+                                    option.IndexOf("}") - option.IndexOf("{") + 1), key.Replace(".", "")).Trim());
+                                break;
+                            }
                         }
                     }
-                }
-
-                // Проверка пустой строки чтобы избежать ошибку в UiPath
-                if (output.Equals(null))
-                {
-                    output = "";
-                }
-                else
-                {
-                    output = String.Join(", ", outputList);
-                }
-
+        
+                    output = outputList.Any() ? string.Join(", ", outputList) : string.Empty;
+                    break;
+        
+                case "line":
+                case "global":
+                    // Return the entire text for 'line' or 'global' formats
+                    output = text;
+                    break;
+        
+                default:
+                    // Default to an empty string if the format is unrecognized
+                    output = string.Empty;
+                    break;
             }
-            else if (sentenceAttributes.format.Equals("line") || sentenceAttributes.format.Equals("global"))
-            {
-                output = text;
-            }
-            else
-            {
-                output = "";
-            }
-
+        
             return output;
-
         }
-
-        // Составляем выходную таблицу
+        
+        // Create a DataTable with columns based on the paragraph and sentence names.
         static DataTable CreateDataTable(ParagraphClass rootObject)
         {
+            // Initialize a new DataTable to store the output
             var outputTable = new DataTable();
-
+        
+            // Iterate through each paragraph in the root object
             foreach (var targetParagraph in rootObject.paragraph)
             {
+                // Iterate through each sentence in the current paragraph
                 foreach (var targetSentence in targetParagraph.sentence)
                 {
-                    // Добавляем колонку в выходную таблицу
-                    outputTable.Columns.Add(("(" + targetParagraph.name + ") " + targetSentence.name).Trim(), typeof(System.String));
-
+                    // Add a new column to the DataTable for each sentence
+                    // The column name is a combination of the paragraph name and sentence name
+                    var columnName = $"({targetParagraph.name}) {targetSentence.name}".Trim();
+                    outputTable.Columns.Add(columnName, typeof(string));
                 }
             }
-
+        
+            // Return the constructed DataTable
             return outputTable;
         }
 
@@ -375,100 +377,89 @@ namespace Raytec.TextTransformation.Activities
         {
             // Inputs
             var text = Text.Get(context);
-            var pathToTheSettingsFile = @PathToTheSettingsFile.Get(context);
+            var pathToTheSettingsFile = PathToTheSettingsFile.Get(context);
             var lineSeparator = LineSeparator.Get(context);
             var cultureVariable = CultureVariable.Get(context);
-
-            ///////////////////////////
-            // Получаем распознанные данные из UiPath
-            var inputText = text;
-
-            // Формируем параграфы из полученного текста
-            var paragraphsText = GetParagraphs(inputText, lineSeparator);
-
-            // Получаем ключевые слова из файла (через UiPath)
-            string jsonFilePath = pathToTheSettingsFile; // UiPath указывает путь к файлу
-            string jsonString = File.ReadAllText(jsonFilePath);
+        
+            // Validate inputs
+            if (string.IsNullOrWhiteSpace(text))
+                throw new ArgumentException("Input text cannot be null or empty.");
+            if (string.IsNullOrWhiteSpace(pathToTheSettingsFile) || !File.Exists(pathToTheSettingsFile))
+                throw new FileNotFoundException("The settings file path is invalid or does not exist.");
+            if (string.IsNullOrWhiteSpace(lineSeparator))
+                throw new ArgumentException("Line separator cannot be null or empty.");
+        
+            // Read and parse the JSON settings file
+            string jsonString = File.ReadAllText(pathToTheSettingsFile);
             var rootObject = JsonSerializer.Deserialize<ParagraphClass>(jsonString);
-
-            /*
-            Формат данных JSON. Сериализация происходит здесь,
-            не в UiPath
-            */
-
-            /*
-            Структура:
-            - inputText
-            - paragraphsText
-            - paragraphsDefined
-            */
-
-            // Создаем выходную таблицу
+        
+            // Split the input text into paragraphs
+            var paragraphsText = GetParagraphs(text, lineSeparator);
+        
+            // Create the output DataTable
             var outputTable = CreateDataTable(rootObject);
-
-            // Создаем выходныую строку
+        
+            // Initialize a list to store the output row
             var outputRow = new List<string>();
-            // ----------------- //
-
-            // Определяем абзацы в данных
-            //var paragraphsText = GetParagraphs(inputText); // Список параграфов из входящего текста
-
-            // Определяем дополнительные хэш переменные для работы с текстом
-            var paragraphsDefined = new Dictionary<string, List<string>>(); // переменная для определения параграфов
-            var sentenceDefined = new Dictionary<string, string>(); // переменная для определения предложений
-
-            // По ключевым словам определить принадлежность абзаца (в настоящее время порядок повествования не определен)      
-
-            // Для каждого паттерна параграфа из настроек, определяем наименование, определяем наименования предложений
-            // Далее получаем данные по паттерну
-            foreach (var targetParagraph in rootObject.paragraph) // Перечисляем все параграфы, указанные в настройках (keywords.json)
+        
+            // Define dictionaries for paragraph and sentence processing
+            var paragraphsDefined = new Dictionary<string, List<string>>();
+        
+            // Process each paragraph defined in the JSON settings
+            foreach (var targetParagraph in rootObject.paragraph)
             {
-                var paragraphNumber = ParagraphDefinition(paragraphsText, targetParagraph, 1); // Ищем параграф в данных на основании ключевых слов
-
+                // Find the best matching paragraph in the input text
+                var paragraphNumber = ParagraphDefinition(paragraphsText, targetParagraph, 1);
+        
                 if (paragraphNumber >= 0)
                 {
-                    
-
-                    foreach (var targetSentence in targetParagraph.sentence) // Перечисляем все предложения, указанные в настройках (keywords.json)
+                    // Split the paragraph into sentences
+                    if (targetParagraph.sentence.Any(s => s.format.Equals("global", StringComparison.OrdinalIgnoreCase)))
                     {
-
-                        if (targetSentence.format.Equals("global"))
-                        {
-                            paragraphsDefined[targetParagraph.name] = String.Join(".", paragraphsText).Split(new[] { "." }, StringSplitOptions.None).ToList();
-                        }
-                        else
-                        {
-                            paragraphsDefined[targetParagraph.name] = paragraphsText[paragraphNumber].Split(new[] { "." }, StringSplitOptions.None).ToList();
-                        }
-
+                        paragraphsDefined[targetParagraph.name] = string.Join(".", paragraphsText)
+                            .Split(new[] { "." }, StringSplitOptions.None)
+                            .ToList();
+                    }
+                    else
+                    {
+                        paragraphsDefined[targetParagraph.name] = paragraphsText[paragraphNumber]
+                            .Split(new[] { "." }, StringSplitOptions.None)
+                            .ToList();
+                    }
+        
+                    // Process each sentence in the paragraph
+                    foreach (var targetSentence in targetParagraph.sentence)
+                    {
                         var sentenceNumber = SentenceDefinition(paragraphsDefined[targetParagraph.name], targetSentence, targetSentence.overlap);
-
+        
                         if (sentenceNumber >= 0)
                         {
-                            var data = GetData(paragraphsDefined[targetParagraph.name][sentenceNumber], targetSentence, cultureVariable); // Вытаскиаем необходимые данные
+                            // Extract data from the sentence
+                            var data = GetData(paragraphsDefined[targetParagraph.name][sentenceNumber], targetSentence, cultureVariable);
                             outputRow.Add(data);
                         }
                         else
                         {
-                            outputRow.Add("");
+                            outputRow.Add(string.Empty); // Add an empty value if no match is found
                         }
-
                     }
                 }
                 else
                 {
-                    foreach (var targetSentence in targetParagraph.sentence) // если параграф не обнаружен, по всем искомым значениям параграфа ставятся пропуски
+                    // Add empty values for all sentences if the paragraph is not found
+                    foreach (var targetSentence in targetParagraph.sentence)
                     {
-                        outputRow.Add("");
+                        outputRow.Add(string.Empty);
                     }
                 }
             }
-
+        
+            // Add the processed row to the output DataTable
             outputTable.Rows.Add(outputRow.ToArray());
-            ///////////////////////////
-
+        
             // Outputs
-            return (ctx) => {
+            return (ctx) =>
+            {
                 Output.Set(ctx, outputTable);
             };
         }
